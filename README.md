@@ -20,5 +20,6 @@ Example 2: The opponent has 39 points, and the current player chooses to roll ze
 ### Swine Swap. 
 ##### After points for the turn are added to the current player's score, if the current and other player's scores share any digits in the same place value, the scores are swapped.
 Example 1: The current player has a total score of 41 and the opponent has 83. The current player rolls one dice with value 2. The player's new score is 43, and the opponent's score is 83. The players' scores both have a 3 in the one's place, so the scores are swapped.
+
 Example 2: The current player has a total score of 41 and the opponent has 52. The current player rolls two dice with total value 10. The player's new score is 51, and the opponent's score is 52. The players' scores both have a 5 in the ten's place, so the scores are swapped.
 
