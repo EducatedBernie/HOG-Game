@@ -55,8 +55,7 @@ def take_turn(num_rolls, opponent_score, dice=six_sided):
     assert opponent_score < 100, 'The game should be over.'
     
     if num_rolls == 0:
-        a,b = opponent_score//10 ,opponent_score % 10
-        return max(a,b) + 1
+        return largest_digit(opponent_score) + 1
     return roll_dice(num_rolls,dice)
         
         
@@ -181,7 +180,8 @@ def make_averaged(fn, num_samples=1000):
     
     return averaged_dice
 
-
+def largest_digit(n):
+    return max(n//10 ,n % 10)
 
 def max_scoring_num_rolls(dice=six_sided):
     """Return the number of dice (1 to 10) that gives the highest average turn
@@ -232,7 +232,7 @@ def average_win_rate(strategy, baseline=always_roll(BASELINE_NUM_ROLLS)):
 
 def run_experiments():
     """Run a series of strategy experiments and report results."""
-    if True: # Change to False when done finding max_scoring_num_rolls
+    if False: # Change to False when done finding max_scoring_num_rolls
         six_sided_max = max_scoring_num_rolls(six_sided)
         print('Max scoring num rolls for six-sided dice:', six_sided_max)
         four_sided_max = max_scoring_num_rolls(four_sided)
@@ -247,7 +247,7 @@ def run_experiments():
     if False: # Change to True to test swap_strategy
         print('swap_strategy win rate:', average_win_rate(swap_strategy))
 
-    if False: # Change to True to test final_strategy
+    if True: # Change to True to test final_strategy
         print('final_strategy win rate:', average_win_rate(final_strategy))
 
     "*** You may add additional experiments as you wish ***"
@@ -265,8 +265,26 @@ def bacon_strategy(score, opponent_score):
     >>> bacon_strategy(50, 70)
     0
     """
-    "*** YOUR CODE HERE ***"
-    return 5 # Replace this statement
+    
+    if (largest_digit(opponent_score) + 1) >= BACON_MARGIN:
+        return 0
+    return BASELINE_NUM_ROLLS # Replace this statement
+
+def alt_bacon_strategy(score, opponent_score, margin):
+    """This strategy rolls 0 dice if that gives at least BACON_MARGIN points,
+    and rolls BASELINE_NUM_ROLLS otherwise.
+
+    >>> bacon_strategy(0, 0)
+    5
+    >>> bacon_strategy(70, 50)
+    5
+    >>> bacon_strategy(50, 70)
+    0
+    """
+    
+    if (largest_digit(opponent_score) + 1) >= margin:
+        return 0
+    return BASELINE_NUM_ROLLS # Replace this statement
 
 def swap_strategy(score, opponent_score):
     """This strategy rolls 0 dice when it would result in a beneficial swap and
@@ -283,16 +301,83 @@ def swap_strategy(score, opponent_score):
     >>> swap_strategy(12, 12) # Baseline
     5
     """
-    "*** YOUR CODE HERE ***"
-    return 5 # Replace this statement
+    after = score + largest_digit(opponent_score) + 1
+    def beneficial(score,opponent_score):
+        return score * 2 == opponent_score
+        
+    def harmful(score,opponent_score):
+        return opponent_score * 2 == score
+    
+    if beneficial(after, opponent_score):
+        return 0
+    
+    elif harmful(after,opponent_score):
+        return BASELINE_NUM_ROLLS 
+    
+    return bacon_strategy(score,opponent_score) 
+    
+    
+def alt_swap_strategy(score, opponent_score):
+
+    after = score + largest_digit(opponent_score) + 1
+    def beneficial(score,opponent_score):
+        return score * 2 == opponent_score
+        
+    def harmful(score,opponent_score):
+        return opponent_score * 2 == score
+    
+    if beneficial(after, opponent_score):
+        return 0
+    
+    elif harmful(after,opponent_score):
+        return BASELINE_NUM_ROLLS
+    
 
 def final_strategy(score, opponent_score):
     """Write a brief description of your final strategy.
 
-    *** YOUR DESCRIPTION HERE ***
+    Take less risks by taking bacon more often when leading.
+    If taking bacon leads to a score of 100 or more, take bacon.
+    Swap when it is beneficial.
+    If taking bacon leaves the other player with a 4 sided dice, to it.
+    Roll the best average dice for your dice type. 
     """
-    "*** YOUR CODE HERE ***"
-    return 5 # Replace this statement
+    
+    #Game state monitoring
+    leading = False
+    lagging = False
+    aboutToLose = False
+    this_dice = select_dice(score,opponent_score)
+    
+    if GOAL_SCORE - opponent_score < 20:
+        aboutToLose = True 
+    if opponent_score - score >= 1:
+        lagging = True        
+    else:
+        lagging = False
+    leading = not lagging
+    
+    
+    #Regular strats
+    roll = 5
+    score_after_bacon = largest_digit(opponent_score) + 1
+    
+    if score_after_bacon >= 100:
+        roll = 0
+        
+    elif leading:
+        return alt_bacon_strategy(score, opponent_score, 4)
+    
+    elif swap_strategy(score, opponent_score) == 0:
+        roll = 0
+        
+    elif score_after_bacon % 7 == 0 and opponent_score % 7 == 0:
+        roll = 0
+    
+    if roll != 0 and this_dice == four_sided:
+            roll = 4
+
+    return roll # Replace this statement
 
 
 ##########################
